@@ -1,5 +1,6 @@
 "use client";
 
+import { FormatText } from "@/components/FormatText";
 import { Button } from "@/components/ui/button";
 import { useTranscriptionContext } from "@/context";
 
@@ -23,15 +24,15 @@ const Page = () => {
   } = useTranscriptionContext();
 
   return (
-    <div className="px-20 pl-36">
-      <div className="w-full">
+    <div className="flex justify-center w-full">
+      <div className="">
         <div
           contentEditable
           suppressContentEditableWarning={true}
-          className="text-slate-700 selection:text-black selection:bg-emerald-200 tespace-pre-wrap outline-none mt-20 max-w-xl text-[1.2vw] font-light leading-loose tracking-tight"
-          dangerouslySetInnerHTML={{ __html: highlightText(text || example) }}
+          className="text-slate-700 selection:text-black selection:bg-emerald-200 tespace-pre-wrap outline-none mt-20 max-w-xl text-lg font-light leading-loose tracking-tight"
+          // dangerouslySetInnerHTML={{ __html: highlightText(text || example) }}
         >
-          {/* {text || highlightText(example)} */}
+          <FormatText unformattedText={text || example} />
         </div>
         <Button className="mt-4">Load more...</Button>
       </div>
