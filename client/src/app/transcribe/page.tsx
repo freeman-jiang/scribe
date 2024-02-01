@@ -1,44 +1,105 @@
 "use client";
 
-import { FormatText } from "@/components/FormatText";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useTranscriptionContext } from "@/context";
+import { useState } from "react";
 
-const highlightText = (unformattedText: string) => {
-  // Define the regular expression to match the {...} pattern
-  const regexPattern = /{([^}]*)}/g;
+interface Annotation {
+  reason: string;
+  text: string;
+}
 
-  // Replace each match with a span that highlights the text
+const parseText = (unformattedText: string) => {
+  // Define the regular expression to match the {text}[annotation] pattern
+  const regexPattern = /{(.*?)}\[(.*?)\]/g;
+
+  const annotations: Annotation[] = [];
   const highlightedText = unformattedText.replace(
     regexPattern,
-    (match, innerPhrase) =>
-      `<span class="bg-red-300 selection:text-red-600">${innerPhrase}</span>`
+    (match, innerPhrase, annotation, offset) => {
+      // Store the annotation with its position
+      annotations.push({
+        reason: annotation,
+        text: innerPhrase,
+      });
+      // Return only the phrase to be highlighted, without the annotation
+      return `<span class="bg-red-200 selection:text-red-700" data-start="${offset}" data-end="${
+        offset + innerPhrase.length
+      }">${innerPhrase}</span>`;
+    }
   );
 
-  return highlightedText;
+  return { highlightedText, annotations };
+};
+
+interface AnnotationProps {
+  annotation: Annotation;
+  expandAll: boolean;
+}
+
+const Annotation = ({ annotation, expandAll }: AnnotationProps) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Collapsible
+      className="mb-2 p-2 border-l-4 border-red-300 bg-red-100"
+      open={expandAll || open}
+      onOpenChange={setOpen}
+    >
+      <CollapsibleTrigger className="font-semibold">
+        {annotation.text}
+      </CollapsibleTrigger>
+      <CollapsibleContent>{annotation.reason}</CollapsibleContent>
+    </Collapsible>
+  );
 };
 
 const Page = () => {
+  // Parse the text to separate content and annotations
   const {
     transcription: { link, text },
   } = useTranscriptionContext();
 
+  const { highlightedText, annotations } = parseText(text || example);
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="flex justify-center w-full">
-      <div className="">
+    <div className="flex">
+      <div className="max-w-3xl mt-12 pl-32">
         <div
           contentEditable
           suppressContentEditableWarning={true}
-          className="text-slate-700 selection:text-black selection:bg-emerald-200 tespace-pre-wrap outline-none mt-20 max-w-xl text-lg font-light leading-loose tracking-tight"
-          // dangerouslySetInnerHTML={{ __html: highlightText(text || example) }}
+          className="text-slate-700 selection:text-black selection:bg-emerald-200 space-pre-wrap outline-none text-lg font-light leading-loose tracking-tight"
+          dangerouslySetInnerHTML={{ __html: highlightedText }}
+        />
+      </div>
+      <div className="w-1/4 ml-24">
+        <Button
+          className="my-4"
+          onClick={() => {
+            setExpanded(!expanded);
+          }}
         >
-          <FormatText unformattedText={text || example} />
-        </div>
-        <Button className="mt-4">Load more...</Button>
+          {expanded ? "Collapse" : "Expand"}
+        </Button>
+        {/* Display annotations here */}
+        {annotations.map((annotation, index) => (
+          <Annotation
+            key={index}
+            annotation={annotation}
+            expandAll={expanded}
+          />
+        ))}
       </div>
     </div>
   );
 };
+
 export default Page;
 
 const lorem =
