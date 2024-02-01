@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useTranscriptionContext } from "@/context";
 
 const highlightText = (unformattedText: string) => {
-  // Define the regular expression to match the {{...}} pattern
-  const regexPattern = /{{([^}]*)}}/g;
+  // Define the regular expression to match the {...} pattern
+  const regexPattern = /{([^}]*)}/g;
 
   // Replace each match with a span that highlights the text
   const highlightedText = unformattedText.replace(

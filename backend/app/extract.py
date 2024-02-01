@@ -6,7 +6,11 @@ from pytube import YouTube
 OUTPUT_DIR = "out"
 
 
-def extract_audio_from_video(link: str):
+def process_video(link: str):
+    """
+    Download the audio from a YouTube video and convert it to mp3
+    Return a tuple of the video title, description, and the mp3 file path
+    """
     yt = YouTube(link)
     video = yt.streams.filter(only_audio=True).first()
     if video is None:
@@ -22,9 +26,9 @@ def extract_audio_from_video(link: str):
     # Optionally, delete the original mp4 file after conversion
     os.remove(mp4_file)
 
-    return mp3_filepath
+    return yt.title, yt.description, mp3_filepath
 
 
 if __name__ == "__main__":
     link = "https://www.youtube.com/watch?v=zCNrB4wNJUU"
-    extract_audio_from_video(link)
+    process_video(link)
