@@ -1,10 +1,14 @@
 import { customAxios } from "@/config";
+import { useTranscriptionContext } from "@/context";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 const Transcribe = () => {
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const { setTranscription } = useTranscriptionContext();
+  const router = useRouter();
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -15,10 +19,11 @@ const Transcribe = () => {
     }
 
     try {
-      const response = await customAxios.get(
+      const response = await customAxios.get<string>(
         `/transcribe?youtube_url=${youtubeUrl}`
       );
-      console.log(response.data);
+      setTranscription({ link: youtubeUrl, text: response.data });
+      router.push(`/transcribe`);
 
       // Do something with the audio file path, e.g., display it or provide a download link
     } catch (error) {

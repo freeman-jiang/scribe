@@ -1,7 +1,12 @@
+import os
+
+import whisper
 from app.extract import extract_audio_from_video
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+
+model = whisper.load_model("base")
 
 app = FastAPI()
 
@@ -25,9 +30,11 @@ async def root():
 async def extract_audio(youtube_url: str):
     mp3_file = extract_audio_from_video(youtube_url)
     print("Audio extracted and saved to", mp3_file)
+    result = model.transcribe(mp3_file)
+    print(f"Transcription complete: {result['text']}")
+    os.remove(mp3_file)
+    return result["text"]
 
-    # Return the audio file
-    return "OK"
 
 # Run server on localhost:8000
 if __name__ == "__main__":
