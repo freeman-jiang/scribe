@@ -32,7 +32,7 @@ const Transcribe = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+    <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -46,7 +46,7 @@ const Transcribe = () => {
           </div>
           <div>
             <Button type="submit" color="primary" className="w-full">
-              Extract Audio
+              Transcribe
             </Button>
           </div>
         </form>

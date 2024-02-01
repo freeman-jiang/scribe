@@ -1,6 +1,8 @@
 import { TranscriptionProvider } from "@/context";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -17,7 +19,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={cn(inter.className, "bg-slate-100")}>
+        <Link
+          href="/"
+          className="mt-6 ml-10 font-serif font-semibold text-2xl block"
+        >
+          Scribe
+        </Link>
         <TranscriptionProvider>{children}</TranscriptionProvider>
       </body>
     </html>

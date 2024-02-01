@@ -30,19 +30,30 @@ app.add_middleware(
 
 
 def annotate_transcription(text: str, title: str, description: str):
-    msg = f"You are a speech-to-text correction system. You are to identify potential phrases or words that don't make sense in the given context. You will be given a title, description, and transcription of a video.\n\nGiven the following: \n\nTitle: \"{title}\"\n\nDescription: \"{description}\"\n\nTranscription: \"{text}\"\n\nReturn you answer exactly as the original text, but surround problematic phrases with {{<problem phrase>}}[<reason why problematic>]"
-    print(msg)
+    prompt = f"""
+Most speech-to-text models & services fall short in recognizing proper nouns.
+Most speech-to-text models transcribe phonetically-similar gibberish in place of the proper noun.
+
+Your job is to be a proper-noun correction system, and identify potential nouns that don't make sense grammatically in the transcription. You are to identify potential phrases or words in the transcription that don't make sense in the context of the video.
+
+Your input is the following: 
+
+Title: "{title}"
+
+Description: "{description}"
+
+Transcription: "{text}
+
+Return your answer in the form of the full original transcription, but augment it by surrounding problematic phrases with {{<problem phrase>}}[<reason why problematic>]:"""
 
     completion = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-1106-preview",
         messages=[
             {"role": "user",
-             "content": msg}
+             "content": prompt}
         ],
         temperature=0.7
     )
-
-    print(completion)
 
     print(completion.choices[0].message.content)
     return completion.choices[0].message.content
