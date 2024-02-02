@@ -1,9 +1,13 @@
+import asyncio
 import os
+from enum import Enum, StrEnum
 
+import validators
 import whisper
 from app.extract import process_video
+from app.ws import ws_manager
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from openai import OpenAI
@@ -65,19 +69,87 @@ async def root():
 
 
 @app.get("/transcribe")
-async def extract_audio(youtube_url: str):
-    title, description, mp3_file = process_video(youtube_url)
-    print(f"Transcribing video: {title}")
-    # print("Audio extracted and saved to", mp3_file)
-    transcription = whisper_model.transcribe(mp3_file)
+async def extract_audio(youtube_url: str, websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    mp3_file = None
 
-    print("Transcription complete, querying OpenAI")
-    response = annotate_transcription(
-        transcription["text"], title, description)
-    # print(f"Transcription complete: {result['text']}")
+    try:
+        # Step 1: Downloading the YouTube Video
+        await ws_manager.send_personal_message("Downloading the YouTube video...", websocket)
+        title, description, mp3_file = process_video(youtube_url)
 
-    os.remove(mp3_file)
-    return response
+        # Step 2: Extracting Audio
+        await ws_manager.send_personal_message("Extracting audio...", websocket)
+
+        # Step 3: Transcribing audio
+        await ws_manager.send_personal_message("Transcribing audio...", websocket)
+        transcription = whisper_model.transcribe(mp3_file)
+        await ws_manager.send_personal_message(f"Raw transcription: {transcription['text']}", websocket)
+
+        # Step 4: Analyzing transcript
+        await ws_manager.send_personal_message("Analyzing transcript...", websocket)
+        annotated_transcription = annotate_transcription(
+            transcription["text"], title, description)
+
+        await ws_manager.send_personal_message("Transcription process completed", websocket)
+        return annotated_transcription
+
+    finally:
+        if mp3_file and os.path.exists(mp3_file):
+            os.remove(mp3_file)
+        ws_manager.disconnect(websocket)
+
+
+class MessageType(StrEnum):
+    DOWNLOAD = "download"
+    TRANSCRIBE = "transcribe"
+    ANALYZE = "analyze"
+    DONE = "done"
+    INVALID_URL = "invalid"
+
+
+@app.websocket("/transcribe")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    try:
+        youtube_url = await websocket.receive_text()
+        try:
+            validators.url(youtube_url)
+            # if neither youtube.com or youtu.be is in the URL, it's not a YouTube URL
+            if "youtube.com" not in youtube_url and "youtu.be" not in youtube_url:
+                raise Exception("Not a YouTube URL")
+        except Exception:
+            await ws_manager.send_json({"type": MessageType.INVALID_URL}, websocket)
+            return
+
+        print("Working on URL:", youtube_url)
+
+        # Step 1: Downloading the YouTube Video
+        await ws_manager.send_json({"type": MessageType.DOWNLOAD}, websocket)
+        print("Downloading the YouTube video...")
+
+        loop = asyncio.get_event_loop()
+
+        title, description, mp3_file = await loop.run_in_executor(None, process_video, youtube_url)
+
+        # Step 2: Extracting Audio
+        await ws_manager.send_json({"type": MessageType.TRANSCRIBE, "title": title}, websocket)
+        print("Extracting transcript from audio...")
+        raw_transcription = await loop.run_in_executor(None, whisper_model.transcribe, mp3_file)
+
+        # Step 3: Analyzing transcript
+        await ws_manager.send_json({"type": MessageType.ANALYZE, "transcription": raw_transcription["text"]}, websocket)
+        print("Analyzing transcript...")
+        annotated_transcription = await loop.run_in_executor(None, annotate_transcription,  raw_transcription["text"], title, description)
+
+        # Step 4: Send the annotated transcription
+        await ws_manager.send_json(
+            {"type": MessageType.DONE, "transcription": annotated_transcription}, websocket)
+
+        # You can process incoming messages here
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+        return
 
 
 # Run server on localhost:8000

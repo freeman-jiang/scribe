@@ -20,10 +20,10 @@ def process_video(link: str):
 
     # Convert and truncate the file to mp3 using moviepy
     audio_clip = AudioFileClip(mp4_file)
-    # Truncate the audio clip to 5 minutes if it's longer than that
-    if audio_clip.duration > 300:
+    # Truncate the audio clip to 3 minutes if it's longer than that
+    if audio_clip.duration > 3 * 60:
         # subclip(start_time, end_time), times in seconds
-        audio_clip = audio_clip.subclip(0, 300)
+        audio_clip = audio_clip.subclip(0, 3 * 60)
     # [:200] to avoid too long filenames
     mp3_filepath = os.path.join(OUTPUT_DIR, f"{yt.title[:200]}.mp3")
     # codec specification is optional but can be included for clarity

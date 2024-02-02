@@ -13,17 +13,9 @@ export interface AnnotationType {
 interface Props {
   annotation: AnnotationType;
   expandAll: boolean;
-  setAnnotationExpanded: (
-    annotation: AnnotationType,
-    isExpanded: boolean
-  ) => void;
 }
 
-export const Annotation = ({
-  annotation,
-  expandAll,
-  setAnnotationExpanded,
-}: Props) => {
+export const Annotation = ({ annotation, expandAll }: Props) => {
   // Individual state for each annotation, but initially set by the global expandAll state
   const [isExpanded, setIsExpanded] = useState(expandAll);
 
@@ -38,7 +30,6 @@ export const Annotation = ({
       open={isExpanded}
       onOpenChange={(isOpen) => {
         setIsExpanded(isOpen); // Update individual state
-        setAnnotationExpanded(annotation, isOpen); // Update the state in the parent component
       }}
     >
       <CollapsibleTrigger className="font-semibold">

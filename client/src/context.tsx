@@ -2,7 +2,6 @@
 import { createContext, useContext, useState } from "react";
 
 export interface Transcription {
-  text: string;
   link: string;
 }
 
@@ -14,7 +13,6 @@ interface TranscriptionContextType {
 
 const TranscriptionContext = createContext<TranscriptionContextType>({
   transcription: {
-    text: "",
     link: "",
   },
   setTranscription: () => {},
@@ -27,16 +25,15 @@ export const TranscriptionProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [transcriptionText, setTranscriptionText] = useState<Transcription>({
-    text: "",
+  const [transcription, setTranscription] = useState<Transcription>({
     link: "",
   });
 
   return (
     <TranscriptionContext.Provider
       value={{
-        transcription: transcriptionText,
-        setTranscription: setTranscriptionText,
+        transcription: transcription,
+        setTranscription: setTranscription,
       }}
     >
       {children}

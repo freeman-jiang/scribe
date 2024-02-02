@@ -1,4 +1,3 @@
-import { customAxios } from "@/config";
 import { useTranscriptionContext } from "@/context";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -18,17 +17,10 @@ const Transcribe = () => {
       return;
     }
 
-    try {
-      const response = await customAxios.get<string>(
-        `/transcribe?youtube_url=${youtubeUrl}`
-      );
-      setTranscription({ link: youtubeUrl, text: response.data });
-      router.push(`/transcribe`);
+    setTranscription({ link: youtubeUrl });
+    router.push(`/transcribe`);
 
-      // Do something with the audio file path, e.g., display it or provide a download link
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    }
+    return;
   };
 
   return (
