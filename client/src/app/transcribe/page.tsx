@@ -7,6 +7,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useTranscriptionContext } from "@/context";
+import { ChevronsLeftRight, ChevronsRightLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface Annotation {
@@ -119,7 +120,12 @@ const Page = () => {
             ); // Apply the change to all annotations
           }}
         >
-          {expandAll ? "Collapse" : "Expand"}
+          {expandAll ? (
+            <ChevronsRightLeft className="mr-3" />
+          ) : (
+            <ChevronsLeftRight className="mr-3" />
+          )}
+          {expandAll ? "Collapse All" : "Expand All"}
         </Button>
         {annotations.map((annotation, index) => (
           <Annotation
