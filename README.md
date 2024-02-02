@@ -2,6 +2,8 @@
 
 Run backend:
 
+- You will need `ffmpeg` installed
+
 ```sh
 cd backend
 python -m venv .venv # Use python 3.11

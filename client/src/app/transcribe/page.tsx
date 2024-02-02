@@ -3,7 +3,7 @@
 import { Annotation, AnnotationType } from "@/components/Annotation";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BASE_URL } from "@/config";
+import { WEBSOCKET_URL } from "@/config";
 import { useTranscriptionContext } from "@/context";
 import { cn } from "@/lib/utils";
 import { ChevronsLeftRight, ChevronsRightLeft } from "lucide-react";
@@ -61,7 +61,7 @@ const Page = () => {
 
   useEffect(() => {
     // Create WebSocket connection.
-    const socket = new WebSocket(`ws:${BASE_URL}/transcribe`);
+    const socket = new WebSocket(`${WEBSOCKET_URL}/transcribe`);
 
     // Error
     socket.addEventListener("error", (event) => {
