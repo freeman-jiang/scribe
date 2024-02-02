@@ -7,7 +7,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useTranscriptionContext } from "@/context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Annotation {
   reason: string;
@@ -27,7 +27,7 @@ const parseText = (unformattedText: string) => {
         reason: annotation,
         text: innerPhrase,
       });
-      // Return only the phrase to be highlighted, without the annotation
+
       return `<span class="bg-red-200 selection:text-red-700" data-start="${offset}" data-end="${
         offset + innerPhrase.length
       }">${innerPhrase}</span>`;
@@ -40,16 +40,30 @@ const parseText = (unformattedText: string) => {
 interface AnnotationProps {
   annotation: Annotation;
   expandAll: boolean;
+  setAnnotationExpanded: (annotation: Annotation, isExpanded: boolean) => void;
 }
 
-const Annotation = ({ annotation, expandAll }: AnnotationProps) => {
-  const [open, setOpen] = useState(false);
+const Annotation = ({
+  annotation,
+  expandAll,
+  setAnnotationExpanded,
+}: AnnotationProps) => {
+  // Individual state for each annotation, but initially set by the global expandAll state
+  const [isExpanded, setIsExpanded] = useState(expandAll);
+
+  // Effect to synchronize individual state with global state
+  useEffect(() => {
+    setIsExpanded(expandAll);
+  }, [expandAll]);
 
   return (
     <Collapsible
-      className="mb-2 p-2 border-l-4 border-red-300 bg-red-100"
-      open={expandAll || open}
-      onOpenChange={setOpen}
+      className="mb-2 p-2 border-l-4 border-red-300 bg-red-100 max-w-xl"
+      open={isExpanded}
+      onOpenChange={(isOpen) => {
+        setIsExpanded(isOpen); // Update individual state
+        setAnnotationExpanded(annotation, isOpen); // Update the state in the parent component
+      }}
     >
       <CollapsibleTrigger className="font-semibold">
         {annotation.text}
@@ -60,39 +74,59 @@ const Annotation = ({ annotation, expandAll }: AnnotationProps) => {
 };
 
 const Page = () => {
-  // Parse the text to separate content and annotations
   const {
-    transcription: { link, text },
+    transcription: { text },
   } = useTranscriptionContext();
 
-  const { highlightedText, annotations } = parseText(text || example);
-  const [expanded, setExpanded] = useState(false);
+  const { highlightedText, annotations: parsedAnnotations } = parseText(
+    text || example
+  );
+  const [annotations, setAnnotations] = useState(parsedAnnotations);
+  const [expandAll, setExpandAll] = useState(false);
+
+  const setAnnotationExpanded = (
+    annotation: Annotation,
+    isExpanded: boolean
+  ) => {
+    setAnnotations(
+      annotations.map((a) => {
+        if (a === annotation) {
+          return { ...a, isExpanded };
+        }
+        return a;
+      })
+    );
+  };
 
   return (
-    <div className="flex">
-      <div className="max-w-3xl mt-12 pl-32">
+    <div className="flex pt-16">
+      <div className="max-w-2xl pl-20">
         <div
           contentEditable
           suppressContentEditableWarning={true}
-          className="text-slate-700 selection:text-black selection:bg-emerald-200 space-pre-wrap outline-none text-lg font-light leading-loose tracking-tight"
+          className="ml-8 text-slate-700 selection:text-black selection:bg-emerald-200 space-pre-wrap outline-none text-lg font-light leading-loose tracking-tight"
           dangerouslySetInnerHTML={{ __html: highlightedText }}
         />
       </div>
-      <div className="w-1/4 ml-24">
+
+      <div className="w-full ml-28">
         <Button
-          className="my-4"
+          className="mb-4"
           onClick={() => {
-            setExpanded(!expanded);
+            setExpandAll(!expandAll); // Toggle global expand/collapse
+            setAnnotations(
+              annotations.map((a) => ({ ...a, isExpanded: !expandAll }))
+            ); // Apply the change to all annotations
           }}
         >
-          {expanded ? "Collapse" : "Expand"}
+          {expandAll ? "Collapse" : "Expand"}
         </Button>
-        {/* Display annotations here */}
         {annotations.map((annotation, index) => (
           <Annotation
             key={index}
             annotation={annotation}
-            expandAll={expanded}
+            expandAll={expandAll}
+            setAnnotationExpanded={setAnnotationExpanded}
           />
         ))}
       </div>
