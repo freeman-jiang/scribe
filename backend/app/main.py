@@ -1,6 +1,6 @@
 import asyncio
 import os
-from enum import Enum, StrEnum
+from enum import StrEnum
 
 import validators
 import whisper
@@ -68,38 +68,6 @@ async def root():
     return {"message": "Hello, World!"}
 
 
-@app.get("/transcribe")
-async def extract_audio(youtube_url: str, websocket: WebSocket):
-    await ws_manager.connect(websocket)
-    mp3_file = None
-
-    try:
-        # Step 1: Downloading the YouTube Video
-        await ws_manager.send_personal_message("Downloading the YouTube video...", websocket)
-        title, description, mp3_file = process_video(youtube_url)
-
-        # Step 2: Extracting Audio
-        await ws_manager.send_personal_message("Extracting audio...", websocket)
-
-        # Step 3: Transcribing audio
-        await ws_manager.send_personal_message("Transcribing audio...", websocket)
-        transcription = whisper_model.transcribe(mp3_file)
-        await ws_manager.send_personal_message(f"Raw transcription: {transcription['text']}", websocket)
-
-        # Step 4: Analyzing transcript
-        await ws_manager.send_personal_message("Analyzing transcript...", websocket)
-        annotated_transcription = annotate_transcription(
-            transcription["text"], title, description)
-
-        await ws_manager.send_personal_message("Transcription process completed", websocket)
-        return annotated_transcription
-
-    finally:
-        if mp3_file and os.path.exists(mp3_file):
-            os.remove(mp3_file)
-        ws_manager.disconnect(websocket)
-
-
 class MessageType(StrEnum):
     DOWNLOAD = "download"
     TRANSCRIBE = "transcribe"
@@ -136,6 +104,9 @@ async def websocket_endpoint(websocket: WebSocket):
         await ws_manager.send_json({"type": MessageType.TRANSCRIBE, "title": title}, websocket)
         print("Extracting transcript from audio...")
         raw_transcription = await loop.run_in_executor(None, whisper_model.transcribe, mp3_file)
+
+        # Remove the mp3 file after extracting the transcript
+        os.remove(mp3_file)
 
         # Step 3: Analyzing transcript
         await ws_manager.send_json({"type": MessageType.ANALYZE, "transcription": raw_transcription["text"]}, websocket)
