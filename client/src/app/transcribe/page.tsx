@@ -1,25 +1,16 @@
 "use client";
 
+import { Annotation, AnnotationType } from "@/components/Annotation";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { useTranscriptionContext } from "@/context";
 import { ChevronsLeftRight, ChevronsRightLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-
-interface Annotation {
-  reason: string;
-  text: string;
-}
+import { useState } from "react";
 
 const parseText = (unformattedText: string) => {
   // Define the regular expression to match the {text}[annotation] pattern
   const regexPattern = /{(.*?)}\[(.*?)\]/g;
 
-  const annotations: Annotation[] = [];
+  const annotations: AnnotationType[] = [];
   const highlightedText = unformattedText.replace(
     regexPattern,
     (match, innerPhrase, annotation, offset) => {
@@ -38,42 +29,6 @@ const parseText = (unformattedText: string) => {
   return { highlightedText, annotations };
 };
 
-interface AnnotationProps {
-  annotation: Annotation;
-  expandAll: boolean;
-  setAnnotationExpanded: (annotation: Annotation, isExpanded: boolean) => void;
-}
-
-const Annotation = ({
-  annotation,
-  expandAll,
-  setAnnotationExpanded,
-}: AnnotationProps) => {
-  // Individual state for each annotation, but initially set by the global expandAll state
-  const [isExpanded, setIsExpanded] = useState(expandAll);
-
-  // Effect to synchronize individual state with global state
-  useEffect(() => {
-    setIsExpanded(expandAll);
-  }, [expandAll]);
-
-  return (
-    <Collapsible
-      className="mb-2 p-2 border-l-4 border-red-300 bg-red-100 max-w-xl"
-      open={isExpanded}
-      onOpenChange={(isOpen) => {
-        setIsExpanded(isOpen); // Update individual state
-        setAnnotationExpanded(annotation, isOpen); // Update the state in the parent component
-      }}
-    >
-      <CollapsibleTrigger className="font-semibold">
-        {annotation.text}
-      </CollapsibleTrigger>
-      <CollapsibleContent>{annotation.reason}</CollapsibleContent>
-    </Collapsible>
-  );
-};
-
 const Page = () => {
   const {
     transcription: { text },
@@ -86,7 +41,7 @@ const Page = () => {
   const [expandAll, setExpandAll] = useState(false);
 
   const setAnnotationExpanded = (
-    annotation: Annotation,
+    annotation: AnnotationType,
     isExpanded: boolean
   ) => {
     setAnnotations(
