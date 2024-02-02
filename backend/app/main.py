@@ -18,7 +18,7 @@ if not os.getenv("OPENAI_API_KEY"):
         "Ensure OPENAI_API_KEY is set in .env file or environment variables")
 
 client = OpenAI()
-whisper_model = whisper.load_model("tiny")
+whisper_model = whisper.load_model("tiny.en")
 
 app = FastAPI()
 
@@ -74,6 +74,7 @@ class MessageType(StrEnum):
     ANALYZE = "analyze"
     DONE = "done"
     INVALID_URL = "invalid"
+    ERROR = "error"
 
 
 @app.websocket("/transcribe")
