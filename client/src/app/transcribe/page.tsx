@@ -39,6 +39,7 @@ enum MessageType {
   ANALYZE = "analyze",
   DONE = "done",
   INVALID_URL = "invalid",
+  ERROR = "error",
 }
 
 interface WebsocketMessage {
@@ -61,6 +62,12 @@ const Page = () => {
   useEffect(() => {
     // Create WebSocket connection.
     const socket = new WebSocket(`ws:${BASE_URL}/transcribe`);
+
+    // Error
+    socket.addEventListener("error", (event) => {
+      console.error("Error connecting to WS Server");
+      setStage(MessageType.ERROR);
+    });
 
     // Connection opened
     socket.addEventListener("open", (event) => {
@@ -99,6 +106,19 @@ const Page = () => {
   }, [link]);
 
   const Result = () => {
+    if (stage == MessageType.ERROR) {
+      return (
+        <div>
+          <div>Encountered server error</div>
+          <div>
+            <Link className="font-bold" href="/">
+              Try again
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
     if (stage == MessageType.INVALID_URL) {
       return (
         <div>
@@ -210,7 +230,7 @@ const Page = () => {
           </div>
         )}
       </div>
-      <div className="mt-12">
+      <div className="mt-12 pb-32">
         <Result />
       </div>
     </div>
