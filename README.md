@@ -28,3 +28,9 @@ cd client
 pnpm i
 pnpm run dev
 ```
+
+Preview
+![image](https://github.com/freeman-jiang/scribe/assets/56516912/7114edcf-ae20-44cf-848e-b6085a9b08b4)
+![image](https://github.com/freeman-jiang/scribe/assets/56516912/9fb5928a-0480-4063-8b01-edcdf7731a0c)
+
+
