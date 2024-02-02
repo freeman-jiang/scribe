@@ -18,7 +18,7 @@ if not os.getenv("OPENAI_API_KEY"):
         "Ensure OPENAI_API_KEY is set in .env file or environment variables")
 
 client = OpenAI()
-whisper_model = whisper.load_model("base")
+whisper_model = whisper.load_model("tiny")
 
 app = FastAPI()
 
@@ -48,7 +48,7 @@ Description: "{description}"
 
 Transcription: "{text}
 
-Return your answer in the form of the full original transcription, but augment it by surrounding problematic phrases with {{<problem phrase>}}[<reason why problematic>]:"""
+Return your answer in the form of the full original transcription, but augment it by surrounding problematic phrases with braces in the following form {{<problem phrase>}}[<reason why problematic>]:"""
 
     completion = client.chat.completions.create(
         model="gpt-4-1106-preview",
